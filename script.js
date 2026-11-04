@@ -107,7 +107,7 @@
     /* --- Contact --- */
     if (data.contact) {
       const c = data.contact;
-      const wa = c.whatsapp || '966509939591';
+      const wa = c.whatsapp || '966531579987';
       document.querySelectorAll('a[href*="wa.me"]').forEach(el => { el.href = `https://wa.me/${wa}`; });
       if (c.maps) {
         document.querySelectorAll('a[href*="google"]').forEach(el => {
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         (notes ? `📝 ملاحظات: ${notes}` : '')
       );
 
-      window.open(`https://wa.me/966509939591?text=${msg}`, '_blank');
+      window.open(`https://wa.me/966531579987?text=${msg}`, '_blank');
     });
   }
 
@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (phone) msg += '📱 الجوال: ' + phone + '\n';
     if (city) msg += '🏙️ المدينة: ' + city + '\n';
 
-    window.open('https://wa.me/966509939591?text=' + encodeURIComponent(msg), '_blank');
+    window.open('https://wa.me/966531579987?text=' + encodeURIComponent(msg), '_blank');
   });
 
   render();
