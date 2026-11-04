@@ -357,3 +357,117 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+/* ============================================
+   CART SYSTEM — سلة المشتريات
+   ============================================ */
+(function () {
+  const CART_KEY = 'talaaNakhlCart';
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch (e) { cart = []; }
+  if (!Array.isArray(cart)) cart = [];
+
+  const $ = (id) => document.getElementById(id);
+  const cartFloat = $('cartFloat'), cartCount = $('cartCount'),
+        cartDrawer = $('cartDrawer'), cartOverlay = $('cartOverlay'),
+        cartClose = $('cartClose'), cartItems = $('cartItems'),
+        cartEmpty = $('cartEmpty'), cartCheckout = $('cartCheckout'),
+        cartTotal = $('cartTotal'), toast = $('toast');
+
+  function save() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+  function totalItems() { return cart.reduce((s, i) => s + i.qty, 0); }
+  function totalPrice() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
+
+  let toastTimer;
+  function showToast(msg) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  function render() {
+    cartCount.textContent = totalItems();
+    cartEmpty.style.display = cart.length ? 'none' : 'block';
+    cartCheckout.style.display = cart.length ? 'flex' : 'none';
+    cartItems.innerHTML = '';
+    cart.forEach((item, idx) => {
+      const el = document.createElement('div');
+      el.className = 'cart-item';
+      el.innerHTML =
+        '<div class="cart-item-info">' +
+          '<h4>' + item.name + '</h4>' +
+          '<span>' + item.price + ' ريال × ' + item.qty + '</span>' +
+        '</div>' +
+        '<div class="cart-qty">' +
+          '<button data-act="dec" data-idx="' + idx + '" aria-label="تقليل">−</button>' +
+          '<span>' + item.qty + '</span>' +
+          '<button data-act="inc" data-idx="' + idx + '" aria-label="زيادة">+</button>' +
+        '</div>' +
+        '<button class="cart-remove" data-act="rm" data-idx="' + idx + '" aria-label="حذف"><i class="fas fa-trash"></i></button>';
+      cartItems.appendChild(el);
+    });
+    cartTotal.textContent = totalPrice() + ' ريال';
+  }
+
+  function addToCart(name, price) {
+    const existing = cart.find(i => i.name === name);
+    if (existing) existing.qty++;
+    else cart.push({ name: name, price: price, qty: 1 });
+    save(); render();
+    showToast('✓ تمت الإضافة إلى السلة');
+  }
+
+  function openCart() { cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); }
+  function closeCart() { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); }
+
+  // "اطلب" buttons on product cards → add to cart
+  document.querySelectorAll('.product-btn, .overlay-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const card = btn.closest('.product-card');
+      if (!card) return;
+      const name = (card.querySelector('h3') || {}).textContent || 'منتج';
+      const priceStr = ((card.querySelector('.product-price strong') || {}).textContent || '0').trim();
+      const price = parseInt(priceStr.replace(/[^0-9]/g, '')) || 0;
+      addToCart(name.trim(), price);
+    });
+  });
+
+  cartFloat.addEventListener('click', openCart);
+  cartClose.addEventListener('click', closeCart);
+  cartOverlay.addEventListener('click', closeCart);
+
+  // Quantity / remove (event delegation)
+  cartItems.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const idx = parseInt(btn.dataset.idx, 10);
+    const act = btn.dataset.act;
+    if (act === 'inc') cart[idx].qty++;
+    else if (act === 'dec') { cart[idx].qty--; if (cart[idx].qty <= 0) cart.splice(idx, 1); }
+    else if (act === 'rm') cart.splice(idx, 1);
+    save(); render();
+  });
+
+  // Checkout via WhatsApp
+  $('checkoutBtn').addEventListener('click', () => {
+    if (!cart.length) return;
+    const name = $('cartName').value.trim();
+    const phone = $('cartPhone').value.trim();
+    const city = $('cartCity').value.trim();
+
+    let lines = cart.map((i, n) => (n + 1) + '. ' + i.name + ' — ' + i.qty + ' × ' + i.price + ' ريال').join('\n');
+    let msg = '🌴 *طلب جديد من طلع النخل*\n\n';
+    msg += '🛒 *تفاصيل الطلب:*\n' + lines + '\n\n';
+    msg += '💰 *الإجمالي التقريبي:* ' + totalPrice() + ' ريال\n';
+    if (name) msg += '👤 الاسم: ' + name + '\n';
+    if (phone) msg += '📱 الجوال: ' + phone + '\n';
+    if (city) msg += '🏙️ المدينة: ' + city + '\n';
+
+    window.open('https://wa.me/966509939591?text=' + encodeURIComponent(msg), '_blank');
+  });
+
+  render();
+})();

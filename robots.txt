@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zbawjeeh35-bot.github.io/talaa-nakhl/sitemap.xml
